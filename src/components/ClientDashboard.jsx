@@ -16,16 +16,61 @@ import {
   Video,
   Download,
   Eye,
-  FileCheck2
+  FileCheck2,
+  Upload,
+  X,
+  Check
 } from 'lucide-react';
 
 export default function ClientDashboard({ cases, onPostNewCase, onSendMessage, onJoinVideoRoom, lawyers }) {
   const [selectedCaseId, setSelectedCaseId] = useState(cases[0]?.id || null);
   const [replyText, setReplyText] = useState('');
   const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'documents', 'chat'
+  const [previewDoc, setPreviewDoc] = useState(null);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [uploadName, setUploadName] = useState('');
+  const [uploadType, setUploadType] = useState('Evidence / Proof');
+  const [uploadedDocsMap, setUploadedDocsMap] = useState({});
 
   const activeCase = cases.find(c => c.id === selectedCaseId) || cases[0];
   const assignedLawyer = lawyers.find(l => l.id === activeCase?.assignedLawyerId) || lawyers[0];
+
+  const currentDocs = [
+    ...(activeCase?.documents || [
+      { name: 'Grievance_Filing_Summary.pdf', size: '420 KB', date: 'Today', type: 'Notice Draft' }
+    ]),
+    ...(uploadedDocsMap[activeCase?.id] || [])
+  ];
+
+  const handleDownloadDoc = (doc) => {
+    const content = `LEGAL VAULT DOCUMENT: ${doc.name}\nTYPE: ${doc.type}\nDATE: ${doc.date}\nCASE ID: ${activeCase?.id}\nCASE TITLE: ${activeCase?.title}\nCLIENT: ${activeCase?.clientName}\nADVOCATE: ${activeCase?.assignedLawyerName || 'Under Assignment'}\nSTATUS: Protected under Indian Evidence Act, 1872 / Bharatiya Sakshya Adhiniyam, 2023.\n\n[CONFIDENTIAL PRIVILEGED LEGAL DOCUMENT RECORD]`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = doc.name.endsWith('.pdf') ? doc.name.replace('.pdf', '.txt') : `${doc.name}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleAddDocument = (e) => {
+    e.preventDefault();
+    if (!uploadName.trim() || !activeCase) return;
+    const newDoc = {
+      name: uploadName.endsWith('.pdf') ? uploadName : `${uploadName}.pdf`,
+      size: `${Math.floor(250 + Math.random() * 650)} KB`,
+      date: 'Just now',
+      type: uploadType
+    };
+    setUploadedDocsMap(prev => ({
+      ...prev,
+      [activeCase.id]: [...(prev[activeCase.id] || []), newDoc]
+    }));
+    setUploadName('');
+    setIsUploadOpen(false);
+  };
 
   const handleSendReply = (e) => {
     e.preventDefault();
@@ -182,7 +227,7 @@ export default function ClientDashboard({ cases, onPostNewCase, onSendMessage, o
                         : 'text-[#666666] hover:bg-legal-cream'
                     }`}
                   >
-                    Document Vault ({activeCase.documents ? activeCase.documents.length : 1})
+                    Document Vault ({currentDocs.length})
                   </button>
                   <button
                     onClick={() => setActiveTab('chat')}
@@ -228,14 +273,21 @@ export default function ClientDashboard({ cases, onPostNewCase, onSendMessage, o
                 {/* Tab: Document Vault */}
                 {activeTab === 'documents' && (
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between text-xs text-[#666666] mb-2">
-                      <span>Encrypted client repository (AES-256)</span>
-                      <span className="text-emerald-700 font-semibold">Protected Under Indian Evidence Act</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-[#666666] mb-2 pb-2 border-b border-legal-creamBorder">
+                      <div className="flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                        <span>Encrypted client repository (AES-256) • Indian Evidence Act</span>
+                      </div>
+                      <button
+                        onClick={() => setIsUploadOpen(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-legal-crimson text-white text-xs font-bold hover:bg-legal-crimsonDark self-start sm:self-auto transition-colors"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload Legal Proof</span>
+                      </button>
                     </div>
 
-                    {(activeCase.documents || [
-                      { name: 'Grievance_Filing_Summary.pdf', size: '420 KB', date: 'Today', type: 'Notice Draft' }
-                    ]).map((doc, dIdx) => (
+                    {currentDocs.map((doc, dIdx) => (
                       <div key={dIdx} className="p-3.5 rounded-xl border border-legal-creamBorder bg-legal-cream/40 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg bg-legal-crimsonLight text-legal-crimson flex items-center justify-center font-bold">
@@ -248,10 +300,18 @@ export default function ClientDashboard({ cases, onPostNewCase, onSendMessage, o
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <button className="p-2 rounded-lg bg-white border border-legal-creamBorder text-xs text-[#444444] hover:text-legal-crimson">
+                          <button 
+                            onClick={() => setPreviewDoc(doc)}
+                            title="Preview Document Record"
+                            className="p-2 rounded-lg bg-white border border-legal-creamBorder text-xs text-[#444444] hover:text-legal-crimson hover:bg-legal-cream transition-colors"
+                          >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
-                          <button className="p-2 rounded-lg bg-white border border-legal-creamBorder text-xs text-[#444444] hover:text-legal-crimson">
+                          <button 
+                            onClick={() => handleDownloadDoc(doc)}
+                            title="Download Document"
+                            className="p-2 rounded-lg bg-white border border-legal-creamBorder text-xs text-[#444444] hover:text-legal-crimson hover:bg-legal-cream transition-colors"
+                          >
                             <Download className="w-3.5 h-3.5" />
                           </button>
                         </div>
@@ -324,6 +384,143 @@ export default function ClientDashboard({ cases, onPostNewCase, onSendMessage, o
         </div>
 
       </div>
+
+      {/* Document Preview Modal */}
+      {previewDoc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-legal-creamBorder overflow-hidden">
+            <div className="px-6 py-4 bg-legal-cream border-b border-legal-creamBorder flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-legal-crimson" />
+                <h3 className="font-bold text-sm text-[#1C1C1C] truncate">{previewDoc.name}</h3>
+              </div>
+              <button 
+                onClick={() => setPreviewDoc(null)}
+                className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[#666666] hover:text-legal-crimson"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4 text-xs">
+              <div className="p-4 rounded-2xl bg-legal-cream/50 border border-legal-creamBorder font-mono space-y-2 text-[#333333]">
+                <div className="flex justify-between border-b pb-1.5 border-legal-creamBorder">
+                  <span className="text-[#777777]">Classification:</span>
+                  <span className="font-bold">{previewDoc.type}</span>
+                </div>
+                <div className="flex justify-between border-b pb-1.5 border-legal-creamBorder">
+                  <span className="text-[#777777]">File Size:</span>
+                  <span>{previewDoc.size}</span>
+                </div>
+                <div className="flex justify-between border-b pb-1.5 border-legal-creamBorder">
+                  <span className="text-[#777777]">Uploaded:</span>
+                  <span>{previewDoc.date}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#777777]">Encryption:</span>
+                  <span className="text-emerald-700 font-bold">AES-256 Verified</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Protected under legal professional privilege. Admissible before Indian Judicial Forums.</span>
+              </div>
+            </div>
+
+            <div className="px-6 py-3.5 bg-legal-cream border-t border-legal-creamBorder flex items-center justify-between">
+              <button
+                onClick={() => setPreviewDoc(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-[#666666] hover:bg-white"
+              >
+                Close Preview
+              </button>
+              <button
+                onClick={() => {
+                  handleDownloadDoc(previewDoc);
+                  setPreviewDoc(null);
+                }}
+                className="inline-flex items-center gap-1.5 bg-legal-crimson text-white px-4 py-2 rounded-xl text-xs font-bold shadow-soft hover:bg-legal-crimsonDark"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download File</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Document Modal */}
+      {isUploadOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-legal-creamBorder overflow-hidden">
+            <div className="px-6 py-4 bg-legal-cream border-b border-legal-creamBorder flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Upload className="w-5 h-5 text-legal-crimson" />
+                <h3 className="font-bold text-sm text-[#1C1C1C]">Upload Case Evidence / Proof</h3>
+              </div>
+              <button 
+                onClick={() => setIsUploadOpen(false)}
+                className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[#666666] hover:text-legal-crimson"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddDocument} className="p-6 space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-[#333333] mb-1">Document Title / File Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Bank_Cheque_Return_Memo_Dated_10Nov.pdf"
+                  value={uploadName}
+                  onChange={(e) => setUploadName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-legal-creamBorder text-xs focus:border-legal-crimson outline-hidden"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#333333] mb-1">Document Category</label>
+                <select
+                  value={uploadType}
+                  onChange={(e) => setUploadType(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-legal-creamBorder text-xs bg-white"
+                >
+                  <option value="Evidence / Proof">Evidence / Proof</option>
+                  <option value="Statutory Notice">Statutory Notice</option>
+                  <option value="Bank Return Memo">Bank Return Memo</option>
+                  <option value="Agreement / Contract">Agreement / Contract</option>
+                  <option value="Police / Cyber Complaint">Police / Cyber Complaint</option>
+                </select>
+              </div>
+
+              <div className="border-2 border-dashed border-legal-creamBorder rounded-2xl p-4 text-center bg-legal-cream/30">
+                <Upload className="w-6 h-6 mx-auto text-[#777777] mb-1" />
+                <span className="font-bold text-[#333333] block">Select Local Document</span>
+                <span className="text-[10px] text-[#888888]">Encrypted before transmission (AES-256)</span>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsUploadOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-[#666666]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!uploadName.trim()}
+                  className="px-5 py-2 rounded-xl bg-legal-crimson hover:bg-legal-crimsonDark disabled:opacity-50 text-white font-bold text-xs shadow-soft"
+                >
+                  Upload & Encrypt
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

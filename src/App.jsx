@@ -46,6 +46,9 @@ export default function App() {
   const [isVideoRoomOpen, setIsVideoRoomOpen] = useState(false);
   const [activeVideoSession, setActiveVideoSession] = useState({ lawyer: null, caseTitle: '' });
   const [selectedProfileLawyer, setSelectedProfileLawyer] = useState(null);
+  const [selectedConsultLawyer, setSelectedConsultLawyer] = useState(null);
+  const [prefilledCaseData, setPrefilledCaseData] = useState({ category: null, description: '' });
+  const [directoryFilter, setDirectoryFilter] = useState({ specialization: 'All', search: '' });
 
   // Switch between citizen and lawyer perspective
   const handleSwitchRole = (role) => {
@@ -117,7 +120,57 @@ export default function App() {
     }));
   };
 
+  const handleOpenDirectory = (specializationOrQuery = 'All') => {
+    const knownCategories = [
+      'Consumer Rights & Refund',
+      'Property & RERA Disputes',
+      'Cheque Bounce (Sec 138)',
+      'Cyber Crime & Online Fraud',
+      'Family & Matrimonial',
+      'Employment & Labor',
+      'Civil Recovery & Notices',
+      'Motor Vehicle & Insurance'
+    ];
+
+    if (knownCategories.includes(specializationOrQuery)) {
+      setDirectoryFilter({ specialization: specializationOrQuery, search: '' });
+    } else if (specializationOrQuery && specializationOrQuery !== 'All') {
+      setDirectoryFilter({ specialization: 'All', search: specializationOrQuery });
+    } else {
+      setDirectoryFilter({ specialization: 'All', search: '' });
+    }
+    setActiveTab('directory');
+  };
+
   const handleBookConsultation = (lawyer) => {
+    setSelectedConsultLawyer(lawyer);
+    setPrefilledCaseData({
+      category: lawyer?.specialization?.[0] || 'Consumer Rights & Refund',
+      description: `Consultation request with ${lawyer?.name} regarding preliminary legal advice and strategic proceedings.`
+    });
+    setIsPostCaseOpen(true);
+  };
+
+  const handleOpenPostCase = (category = null) => {
+    setSelectedConsultLawyer(null);
+    setPrefilledCaseData({
+      category: category || null,
+      description: ''
+    });
+    setIsPostCaseOpen(true);
+  };
+
+  const handleConnectNoticeToAdvocate = ({ noticeType, formData }) => {
+    setIsNoticeGenOpen(false);
+    let cat = 'Consumer Rights & Refund';
+    if (noticeType === 'cheque') cat = 'Cheque Bounce (Sec 138)';
+    if (noticeType === 'deposit') cat = 'Property & RERA Disputes';
+
+    setSelectedConsultLawyer(null);
+    setPrefilledCaseData({
+      category: cat,
+      description: `Formal statutory demand notice drafted for ${formData.recipientName} regarding claim of ${formData.amount}. Reference: ${formData.chequeNo || 'Notice Ref'}. Seeking advocate to review and issue on advocate letterhead.`
+    });
     setIsPostCaseOpen(true);
   };
 
@@ -144,7 +197,7 @@ export default function App() {
         onSwitchRole={handleSwitchRole}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onOpenPostCase={() => setIsPostCaseOpen(true)}
+        onOpenPostCase={() => handleOpenPostCase()}
         onOpenAuth={() => setIsAuthOpen(true)}
         onOpenNoticeGen={() => setIsNoticeGenOpen(true)}
         user={user}
@@ -161,12 +214,12 @@ export default function App() {
           <div className="fade-in">
             {/* 1. Hero Section matching image */}
             <LandingHero
-              onFindLawyer={() => setActiveTab('directory')}
+              onFindLawyer={(q) => handleOpenDirectory(q)}
               onJoinLawyer={() => {
                 handleSwitchRole('lawyer');
                 setActiveTab('lawyer-desk');
               }}
-              onPostCase={() => setIsPostCaseOpen(true)}
+              onPostCase={() => handleOpenPostCase()}
               onOpenNoticeGen={() => setIsNoticeGenOpen(true)}
               lang={lang}
               translations={TRANSLATIONS}
@@ -174,8 +227,8 @@ export default function App() {
 
             {/* 2. 3 Simple Steps */}
             <StepsSection
-              onPostCase={() => setIsPostCaseOpen(true)}
-              onExploreLawyers={() => setActiveTab('directory')}
+              onPostCase={() => handleOpenPostCase()}
+              onExploreLawyers={() => handleOpenDirectory('All')}
               onOpenPortal={() => setActiveTab('client-portal')}
             />
 
@@ -189,7 +242,7 @@ export default function App() {
 
             {/* 4. Interactive Limitation & Court Finder Tool */}
             <LimitationCalculator
-              onPostCase={() => setIsPostCaseOpen(true)}
+              onPostCase={(category) => handleOpenPostCase(category)}
             />
 
             {/* 5. For Junior Lawyers */}
@@ -206,8 +259,8 @@ export default function App() {
 
             {/* 6. For Common People */}
             <ForCommonPeople
-              onFindLawyer={() => setActiveTab('directory')}
-              onPostCase={() => setIsPostCaseOpen(true)}
+              onFindLawyer={() => handleOpenDirectory('All')}
+              onPostCase={() => handleOpenPostCase()}
             />
 
             {/* 7. BCI & Bar Council Compliance Strip */}
@@ -218,7 +271,7 @@ export default function App() {
 
             {/* 9. Ready to Get Started? (Coral Gradient CTA) */}
             <ReadyCTA
-              onPostCase={() => setIsPostCaseOpen(true)}
+              onPostCase={() => handleOpenPostCase()}
               onLawyerRegister={() => {
                 handleSwitchRole('lawyer');
                 setIsAuthOpen(true);
@@ -232,6 +285,8 @@ export default function App() {
           <div className="fade-in">
             <LawyerDirectory
               lawyers={lawyers}
+              initialSpecialization={directoryFilter.specialization}
+              initialSearch={directoryFilter.search}
               onSelectLawyer={(lawyer) => handleBookConsultation(lawyer)}
               onBookConsultation={(lawyer) => handleBookConsultation(lawyer)}
               onOpenProfile={(lawyer) => setSelectedProfileLawyer(lawyer)}
@@ -244,7 +299,7 @@ export default function App() {
           <div className="fade-in">
             <ClientDashboard
               cases={cases}
-              onPostNewCase={() => setIsPostCaseOpen(true)}
+              onPostNewCase={() => handleOpenPostCase()}
               onSendMessage={handleSendMessage}
               onJoinVideoRoom={handleJoinVideoRoom}
               lawyers={lawyers}
@@ -267,14 +322,24 @@ export default function App() {
       </main>
 
       {/* Global Footer matching image */}
-      <Footer onNavigate={(tab) => setActiveTab(tab)} />
+      <Footer 
+        onNavigate={(tab) => setActiveTab(tab)} 
+        onSelectCategory={(cat) => handleOpenDirectory(cat)}
+      />
 
       {/* Interactive Post Case Wizard Modal */}
       <PostCaseModal
         isOpen={isPostCaseOpen}
-        onClose={() => setIsPostCaseOpen(false)}
+        onClose={() => {
+          setIsPostCaseOpen(false);
+          setSelectedConsultLawyer(null);
+          setPrefilledCaseData({ category: null, description: '' });
+        }}
         onCaseCreated={handleCaseCreated}
         user={user}
+        selectedLawyer={selectedConsultLawyer}
+        initialCategory={prefilledCaseData.category}
+        initialDescription={prefilledCaseData.description}
       />
 
       {/* Auth / Role Switcher Modal */}
@@ -289,6 +354,7 @@ export default function App() {
       <LegalNoticeGenerator
         isOpen={isNoticeGenOpen}
         onClose={() => setIsNoticeGenOpen(false)}
+        onConnectAdvocate={handleConnectNoticeToAdvocate}
       />
 
       {/* Live Virtual Video Consultation Chamber Modal */}

@@ -144,12 +144,12 @@ export default function LandingHero({ onFindLawyer, onJoinLawyer, onPostCase, on
                 value={quickSearch}
                 onChange={(e) => setQuickSearch(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') onFindLawyer();
+                  if (e.key === 'Enter') onFindLawyer(quickSearch);
                 }}
                 className="w-full px-3 py-2 text-xs sm:text-sm text-[#222222] placeholder-[#888888] outline-hidden bg-transparent"
               />
               <button
-                onClick={onFindLawyer}
+                onClick={() => onFindLawyer(quickSearch)}
                 className="bg-legal-crimson hover:bg-legal-crimsonDark text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all shadow-2xs"
               >
                 Search
@@ -162,8 +162,8 @@ export default function LandingHero({ onFindLawyer, onJoinLawyer, onPostCase, on
               {popularTags.map((tag, i) => (
                 <button
                   key={i}
-                  onClick={onFindLawyer}
-                  className="px-2.5 py-1 rounded-full bg-white hover:bg-legal-crimsonLight text-[#555555] hover:text-legal-crimson border border-legal-creamBorder text-[11px] font-semibold transition-all"
+                  onClick={() => onFindLawyer(tag.cat)}
+                  className="px-2.5 py-1 rounded-full bg-white hover:bg-legal-crimsonLight text-[#555555] hover:text-legal-crimson border border-legal-creamBorder text-[11px] font-semibold transition-all cursor-pointer"
                 >
                   {tag.label}
                 </button>

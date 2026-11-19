@@ -18,7 +18,9 @@ import {
   Video,
   FileText,
   Building2,
-  Scale
+  Scale,
+  PlusCircle,
+  X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -26,6 +28,61 @@ export default function LawyerDashboard({ cases, onAcceptCase, onSendMessage, on
   const [activeTab, setActiveTab] = useState('leads'); // 'leads', 'active', 'diary', 'analytics'
   const [activeChatCaseId, setActiveChatCaseId] = useState(cases[0]?.id || null);
   const [chatInput, setChatInput] = useState('');
+  const [isAddDiaryOpen, setIsAddDiaryOpen] = useState(false);
+  const [newDiary, setNewDiary] = useState({
+    date: '15 DEC',
+    title: '',
+    caseRef: '',
+    court: 'Tis Hazari Courts, New Delhi',
+    room: 'Court Room 22',
+    itemNo: 'Item No. 12',
+    time: '11:00 AM'
+  });
+
+  const [diaryEntries, setDiaryEntries] = useState([
+    {
+      date: '24 NOV',
+      title: 'Section 91 Representation - Cyber Crime Cell / Police Station',
+      caseRef: 'Case: LC-CASE-101 • Beneficiary account freeze order application',
+      court: 'Patiala House Courts, New Delhi • Court Room 14',
+      badge: 'Item No. 18 • 11:30 AM',
+      color: 'bg-legal-crimson'
+    },
+    {
+      date: '30 NOV',
+      title: 'Cheque Dishonour Statutory Notice 15-Day Expiry',
+      caseRef: 'Case: LC-CASE-102 • Ready complaint under Sec 138 NI Act if unpaid',
+      court: 'District Courts Complex, Sector 43, Chandigarh • JMIC Court 3',
+      badge: 'Statutory Limitation',
+      color: 'bg-legal-bronze'
+    }
+  ]);
+
+  const handleAddDiaryEntry = (e) => {
+    e.preventDefault();
+    if (!newDiary.title.trim()) return;
+    setDiaryEntries(prev => [
+      ...prev,
+      {
+        date: newDiary.date.toUpperCase(),
+        title: newDiary.title,
+        caseRef: newDiary.caseRef || 'Active Matter Hearing',
+        court: `${newDiary.court} • ${newDiary.room}`,
+        badge: `${newDiary.itemNo} • ${newDiary.time}`,
+        color: 'bg-emerald-700'
+      }
+    ]);
+    setNewDiary({
+      date: '15 DEC',
+      title: '',
+      caseRef: '',
+      court: 'Tis Hazari Courts, New Delhi',
+      room: 'Court Room 22',
+      itemNo: 'Item No. 12',
+      time: '11:00 AM'
+    });
+    setIsAddDiaryOpen(false);
+  };
 
   // Unassigned cases seeking advocate
   const openLeads = cases.filter(c => !c.assignedLawyerId || c.status === 'Seeking Advocate');
@@ -326,57 +383,161 @@ export default function LawyerDashboard({ cases, onAcceptCase, onSendMessage, on
         {/* Tab 3: Court Diary & Hearing Dates */}
         {activeTab === 'diary' && (
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-legal-creamBorder shadow-card">
-            <h2 className="text-xl font-bold font-legal-title text-[#1C1C1C] mb-4">
-              Litigation Diary & Cause List Schedule
-            </h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-xl font-bold font-legal-title text-[#1C1C1C]">
+                  Litigation Diary & Cause List Schedule
+                </h2>
+                <p className="text-xs text-[#666666] mt-0.5">
+                  Track court appearances, item numbers, and statutory limitation deadlines.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setIsAddDiaryOpen(true)}
+                className="inline-flex items-center gap-1.5 bg-legal-bronze hover:bg-legal-bronzeDark text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-2xs active:scale-95"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Add Cause List Entry</span>
+              </button>
+            </div>
 
             <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-legal-cream/80 border border-legal-creamBorder flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-start gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-legal-crimson text-white flex items-center justify-center font-bold text-xs shrink-0">
-                    24 NOV
+              {diaryEntries.map((entry, idx) => (
+                <div key={idx} className="p-4 rounded-2xl bg-legal-cream/80 border border-legal-creamBorder flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-legal-bronze/30 transition-all">
+                  <div className="flex items-start gap-3.5">
+                    <div className={`w-11 h-11 rounded-xl ${entry.color || 'bg-legal-bronze'} text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs text-center px-1`}>
+                      {entry.date}
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-[#1C1C1C]">
+                        {entry.title}
+                      </h3>
+                      <p className="text-xs text-[#666666]">
+                        {entry.caseRef}
+                      </p>
+                      <span className="text-[11px] text-legal-bronze font-semibold">
+                        🏛️ {entry.court}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[#1C1C1C]">
-                      Section 91 Representation - Cyber Crime Cell / Police Station
-                    </h3>
-                    <p className="text-xs text-[#666666]">
-                      Case: LC-CASE-101 • Beneficiary account freeze order application
-                    </p>
-                    <span className="text-[11px] text-legal-crimson font-semibold">
-                      🏛️ Patiala House Courts, New Delhi • Court Room 14
-                    </span>
-                  </div>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-amber-100 text-amber-800 shrink-0">
+                    {entry.badge}
+                  </span>
                 </div>
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-amber-100 text-amber-800">
-                  Item No. 18 • 11:30 AM
-                </span>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-legal-cream/80 border border-legal-creamBorder flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-start gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-legal-bronze text-white flex items-center justify-center font-bold text-xs shrink-0">
-                    30 NOV
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[#1C1C1C]">
-                      Cheque Dishonour Statutory Notice 15-Day Expiry
-                    </h3>
-                    <p className="text-xs text-[#666666]">
-                      Case: LC-CASE-102 • Ready complaint under Sec 138 NI Act if unpaid
-                    </p>
-                    <span className="text-[11px] text-legal-bronze font-semibold">
-                      🏛️ District Courts Complex, Sector 43, Chandigarh • JMIC Court 3
-                    </span>
-                  </div>
-                </div>
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800">
-                  Statutory Limitation
-                </span>
-              </div>
+              ))}
             </div>
           </div>
         )}
+
+      </div>
+
+      {/* Add Cause List Modal */}
+      {isAddDiaryOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-legal-creamBorder overflow-hidden">
+            <div className="px-6 py-4 bg-legal-cream border-b border-legal-creamBorder flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-legal-bronze" />
+                <h3 className="font-bold text-sm text-[#1C1C1C]">Add Court Hearing / Cause List Entry</h3>
+              </div>
+              <button 
+                onClick={() => setIsAddDiaryOpen(false)}
+                className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[#666666] hover:text-legal-crimson"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddDiaryEntry} className="p-6 space-y-3.5 text-xs">
+              <div>
+                <label className="block font-bold text-[#333333] mb-1">Matter / Hearing Title</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Preliminary Arguments on Summoning Order"
+                  value={newDiary.title}
+                  onChange={(e) => setNewDiary({ ...newDiary, title: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-legal-creamBorder text-xs focus:border-legal-bronze outline-hidden"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#333333] mb-1">Date (e.g. 15 DEC)</label>
+                  <input
+                    type="text"
+                    value={newDiary.date}
+                    onChange={(e) => setNewDiary({ ...newDiary, date: e.target.value })}
+                    className="w-full px-3.5 py-2 rounded-xl border border-legal-creamBorder text-xs"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#333333] mb-1">Item No. & Time</label>
+                  <input
+                    type="text"
+                    value={newDiary.itemNo}
+                    onChange={(e) => setNewDiary({ ...newDiary, itemNo: e.target.value })}
+                    className="w-full px-3.5 py-2 rounded-xl border border-legal-creamBorder text-xs"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#333333] mb-1">Court Complex</label>
+                <input
+                  type="text"
+                  value={newDiary.court}
+                  onChange={(e) => setNewDiary({ ...newDiary, court: e.target.value })}
+                  className="w-full px-3.5 py-2 rounded-xl border border-legal-creamBorder text-xs"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#333333] mb-1">Court Room</label>
+                <input
+                  type="text"
+                  value={newDiary.room}
+                  onChange={(e) => setNewDiary({ ...newDiary, room: e.target.value })}
+                  className="w-full px-3.5 py-2 rounded-xl border border-legal-creamBorder text-xs"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#333333] mb-1">Case Reference (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Case: LC-CASE-103 • Cheque Dishonour"
+                  value={newDiary.caseRef}
+                  onChange={(e) => setNewDiary({ ...newDiary, caseRef: e.target.value })}
+                  className="w-full px-3.5 py-2 rounded-xl border border-legal-creamBorder text-xs"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddDiaryOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-[#666666]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!newDiary.title.trim()}
+                  className="px-5 py-2 rounded-xl bg-legal-bronze hover:bg-legal-bronzeDark disabled:opacity-50 text-white font-bold text-xs shadow-soft"
+                >
+                  Add to Cause List
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       </div>
     </div>

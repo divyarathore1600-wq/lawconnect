@@ -18,15 +18,23 @@ import {
 import confetti from 'canvas-confetti';
 import { CASE_CATEGORIES } from '../data/mockData';
 
-export default function PostCaseModal({ isOpen, onClose, onCaseCreated, user }) {
+export default function PostCaseModal({ 
+  isOpen, 
+  onClose, 
+  onCaseCreated, 
+  user, 
+  selectedLawyer = null,
+  initialCategory = null,
+  initialDescription = ''
+}) {
   if (!isOpen) return null;
 
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     title: '',
-    category: 'Consumer Rights & Refund',
-    description: '',
-    city: 'New Delhi',
+    category: initialCategory || (selectedLawyer?.specialization?.[0]) || 'Consumer Rights & Refund',
+    description: initialDescription || '',
+    city: selectedLawyer ? selectedLawyer.city : 'New Delhi',
     state: 'Delhi',
     disputeAmount: '₹50,000',
     urgency: 'Medium',
@@ -73,6 +81,7 @@ export default function PostCaseModal({ isOpen, onClose, onCaseCreated, user }) 
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const isDirectAdvocate = Boolean(selectedLawyer);
     const newCase = {
       id: `LC-CASE-${Math.floor(100 + Math.random() * 900)}`,
       title: formData.title || `${formData.category} Grievance`,
@@ -80,20 +89,31 @@ export default function PostCaseModal({ isOpen, onClose, onCaseCreated, user }) 
       clientName: formData.clientName,
       city: formData.city,
       state: formData.state,
-      budget: '₹500 - ₹1,500',
-      status: 'Seeking Advocate',
-      assignedLawyerId: null,
-      assignedLawyerName: null,
+      budget: selectedLawyer ? `₹${selectedLawyer.consultationFee}` : '₹500 - ₹1,500',
+      status: isDirectAdvocate ? 'Advocate Assigned' : 'Seeking Advocate',
+      assignedLawyerId: selectedLawyer ? selectedLawyer.id : null,
+      assignedLawyerName: selectedLawyer ? selectedLawyer.name : null,
       datePosted: new Date().toISOString().split('T')[0],
       urgency: formData.urgency,
       description: formData.description,
       timeline: [
         { step: 'Case Posted', date: 'Today', done: true, desc: 'Case details submitted securely' },
-        { step: 'Advocate Assigned', date: 'In progress', done: false, desc: 'Matching with verified advocates' },
+        { 
+          step: isDirectAdvocate ? 'Advocate Connected' : 'Advocate Assigned', 
+          date: isDirectAdvocate ? 'Just now' : 'In progress', 
+          done: isDirectAdvocate, 
+          desc: isDirectAdvocate ? `Assigned to ${selectedLawyer.name}` : 'Matching with verified advocates' 
+        },
         { step: 'Consultation & Strategy', date: 'Pending', done: false, desc: '1-on-1 legal review' },
         { step: 'Legal Action / Notice', date: 'Pending', done: false, desc: 'Drafting statutory notice or petition' },
       ],
-      messages: []
+      messages: isDirectAdvocate ? [
+        {
+          sender: 'lawyer',
+          text: `Namaste ${formData.clientName}! I have accepted your matter regarding "${formData.title || formData.category}". I am reviewing your facts and will assist you with legal strategy and proceedings.`,
+          time: 'Just now'
+        }
+      ] : []
     };
 
     confetti({
@@ -117,7 +137,9 @@ export default function PostCaseModal({ isOpen, onClose, onCaseCreated, user }) 
               <Scale className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-[#1E1E1E]">Post Your Legal Matter</h3>
+              <h3 className="text-lg font-bold text-[#1E1E1E]">
+                {selectedLawyer ? 'Book Consultation with Advocate' : 'Post Your Legal Matter'}
+              </h3>
               <p className="text-xs text-[#666666]">Confidential & BCI Rule 36 Compliant</p>
             </div>
           </div>
@@ -128,6 +150,21 @@ export default function PostCaseModal({ isOpen, onClose, onCaseCreated, user }) 
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Selected Advocate Banner */}
+        {selectedLawyer && (
+          <div className="bg-emerald-50 px-6 py-2.5 border-b border-emerald-200 flex items-center justify-between text-xs text-emerald-900">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>
+                Consulting with <strong>{selectedLawyer.name}</strong> • {selectedLawyer.barCouncilId} ({selectedLawyer.city})
+              </span>
+            </div>
+            <span className="font-bold text-emerald-800 bg-white px-2 py-0.5 rounded border border-emerald-300">
+              ₹{selectedLawyer.consultationFee} / 30m
+            </span>
+          </div>
+        )}
 
         {/* Wizard Progress Bar */}
         <div className="bg-legal-cream px-6 py-3 border-b border-legal-creamBorder flex items-center justify-between text-xs font-semibold text-[#666666]">
@@ -381,9 +418,9 @@ export default function PostCaseModal({ isOpen, onClose, onCaseCreated, user }) 
           ) : (
             <button
               onClick={handleSubmit}
-              className="inline-flex items-center gap-2 bg-legal-crimson hover:bg-legal-crimsonDark text-white px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-elevated"
+              className="inline-flex items-center gap-2 bg-legal-crimson hover:bg-legal-crimsonDark text-white px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-elevated transition-all active:scale-95"
             >
-              <span>Submit & Match Lawyers</span>
+              <span>{selectedLawyer ? 'Confirm & Book Consultation' : 'Submit & Match Lawyers'}</span>
               <CheckCircle className="w-4 h-4" />
             </button>
           )}

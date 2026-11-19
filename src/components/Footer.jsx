@@ -1,7 +1,23 @@
 import React from 'react';
 import { Scale, Mail, Phone, MapPin, ShieldCheck, Heart } from 'lucide-react';
 
-export default function Footer({ onNavigate }) {
+export default function Footer({ onNavigate, onSelectCategory }) {
+  const categories = [
+    { label: 'Consumer Forum Complaints', cat: 'Consumer Rights & Refund' },
+    { label: 'Cheque Bounce (Sec 138 NI Act)', cat: 'Cheque Bounce (Sec 138)' },
+    { label: 'Property & MahaRERA Disputes', cat: 'Property & RERA Disputes' },
+    { label: 'Cyber Fraud & UPI Recovery', cat: 'Cyber Crime & Online Fraud' },
+    { label: 'Mutual Consent Divorce & Family', cat: 'Family & Matrimonial' },
+    { label: 'Employment Termination Dues', cat: 'Employment & Labor' },
+  ];
+
+  const handleCategoryClick = (cat) => {
+    if (onSelectCategory) {
+      onSelectCategory(cat);
+    } else if (onNavigate) {
+      onNavigate('directory');
+    }
+  };
   return (
     <footer className="bg-legal-dark text-[#D0DFDC] pt-14 pb-10 border-t border-legal-darkBorder">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -68,12 +84,16 @@ export default function Footer({ onNavigate }) {
               Case Categories
             </h4>
             <ul className="space-y-2.5 text-xs text-[#95AEA9]">
-              <li><span className="hover:text-white cursor-pointer">Consumer Forum Complaints</span></li>
-              <li><span className="hover:text-white cursor-pointer">Cheque Bounce (Sec 138 NI Act)</span></li>
-              <li><span className="hover:text-white cursor-pointer">Property & MahaRERA Disputes</span></li>
-              <li><span className="hover:text-white cursor-pointer">Cyber Fraud & UPI Recovery</span></li>
-              <li><span className="hover:text-white cursor-pointer">Mutual Consent Divorce & Family</span></li>
-              <li><span className="hover:text-white cursor-pointer">Employment Termination Dues</span></li>
+              {categories.map((c, i) => (
+                <li key={i}>
+                  <button
+                    onClick={() => handleCategoryClick(c.cat)}
+                    className="hover:text-white transition-colors text-left"
+                  >
+                    {c.label}
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
 
