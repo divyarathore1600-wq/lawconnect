@@ -96,7 +96,7 @@ export default function LimitationCalculator({ onPostCase }) {
                   Need an advocate to draft this notice today?
                 </span>
                 <button
-                  onClick={onPostCase}
+                  onClick={() => onPostCase(current.category)}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-legal-crimson hover:bg-legal-crimsonDark text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-soft transition-all active:scale-95"
                 >
                   <span>Post {current.category} Dispute</span>

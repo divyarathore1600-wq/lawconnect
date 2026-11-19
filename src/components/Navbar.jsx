@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Scale, 
   ShieldCheck, 
@@ -8,7 +8,9 @@ import {
   LogIn, 
   Languages, 
   FileText,
-  Calculator
+  Calculator,
+  Menu,
+  X
 } from 'lucide-react';
 
 export default function Navbar({
@@ -23,6 +25,7 @@ export default function Navbar({
   lang,
   onToggleLang,
 }) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-legal-creamBorder shadow-xs">
       {/* Top micro banner for BCI disclaimer & quick tools */}
@@ -204,9 +207,135 @@ export default function Navbar({
               <LogIn className="w-4 h-4" />
               <span>{user ? user.name.split(' ')[0] : 'Sign Up / Login'}</span>
             </button>
+
+            {/* Mobile Hamburger Menu Toggle */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="lg:hidden p-2 rounded-lg border border-legal-creamBorder text-[#444444] hover:bg-legal-cream hover:text-legal-crimson transition-colors"
+              aria-label="Toggle navigation menu"
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5 text-legal-crimson" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Mobile Navigation Drawer */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden bg-white border-b border-legal-creamBorder px-4 pt-3 pb-5 space-y-3 shadow-lg fade-in">
+          {/* Mobile Role Switcher */}
+          <div className="flex items-center justify-between p-2 rounded-xl bg-legal-cream border border-legal-creamBorder">
+            <span className="text-xs font-bold text-[#555555]">Active Perspective:</span>
+            <div className="flex items-center bg-white p-0.5 rounded-lg border border-legal-creamBorder text-xs">
+              <button
+                onClick={() => { onSwitchRole('client'); setIsMobileMenuOpen(false); }}
+                className={`px-3 py-1 rounded-md font-semibold transition-all ${
+                  currentRole === 'client' ? 'bg-legal-crimson text-white shadow-xs' : 'text-[#666666]'
+                }`}
+              >
+                Citizen
+              </button>
+              <button
+                onClick={() => { onSwitchRole('lawyer'); setIsMobileMenuOpen(false); }}
+                className={`px-3 py-1 rounded-md font-semibold transition-all ${
+                  currentRole === 'lawyer' ? 'bg-legal-dark text-white shadow-xs' : 'text-[#666666]'
+                }`}
+              >
+                Junior Lawyer
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Nav Links */}
+          <div className="flex flex-col space-y-1 text-sm font-semibold text-[#444444]">
+            <button
+              onClick={() => { setActiveTab('home'); setIsMobileMenuOpen(false); }}
+              className={`text-left px-3 py-2 rounded-lg transition-colors ${
+                activeTab === 'home' ? 'text-legal-crimson bg-legal-crimsonLight font-bold' : 'hover:bg-legal-cream'
+              }`}
+            >
+              Home
+            </button>
+            <button
+              onClick={() => { setActiveTab('directory'); setIsMobileMenuOpen(false); }}
+              className={`text-left px-3 py-2 rounded-lg transition-colors ${
+                activeTab === 'directory' ? 'text-legal-crimson bg-legal-crimsonLight font-bold' : 'hover:bg-legal-cream'
+              }`}
+            >
+              Find Lawyers
+            </button>
+            <button
+              onClick={() => {
+                const el = document.getElementById('steps-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                else setActiveTab('home');
+                setIsMobileMenuOpen(false);
+              }}
+              className="text-left px-3 py-2 rounded-lg hover:bg-legal-cream transition-colors"
+            >
+              How It Works
+            </button>
+            <button
+              onClick={() => {
+                const el = document.getElementById('junior-lawyers-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                else setActiveTab('home');
+                setIsMobileMenuOpen(false);
+              }}
+              className="text-left px-3 py-2 rounded-lg hover:bg-legal-cream transition-colors"
+            >
+              For Lawyers
+            </button>
+            <button
+              onClick={() => {
+                const el = document.getElementById('common-people-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                else setActiveTab('home');
+                setIsMobileMenuOpen(false);
+              }}
+              className="text-left px-3 py-2 rounded-lg hover:bg-legal-cream transition-colors"
+            >
+              For Citizens
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab(currentRole === 'lawyer' ? 'lawyer-desk' : 'client-portal');
+                setIsMobileMenuOpen(false);
+              }}
+              className={`text-left px-3 py-2 rounded-lg font-bold border flex items-center justify-between transition-all ${
+                activeTab === 'lawyer-desk' || activeTab === 'client-portal'
+                  ? 'bg-legal-dark text-white border-legal-dark shadow-xs'
+                  : 'border-legal-creamBorder text-legal-dark bg-legal-cream'
+              }`}
+            >
+              <span>{currentRole === 'lawyer' ? 'Lawyer Chamber' : 'My Cases Desk'}</span>
+              {currentRole === 'lawyer' ? (
+                <Briefcase className="w-4 h-4 text-amber-400" />
+              ) : (
+                <UserCheck className="w-4 h-4 text-emerald-600" />
+              )}
+            </button>
+          </div>
+
+          {/* Quick Action buttons in drawer */}
+          <div className="pt-2 border-t border-legal-creamBorder flex flex-col gap-2">
+            <button
+              onClick={() => { onOpenNoticeGen(); setIsMobileMenuOpen(false); }}
+              className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold transition-colors"
+            >
+              <FileText className="w-4 h-4 text-amber-600" />
+              <span>Generate Statutory Legal Notice</span>
+            </button>
+            <button
+              onClick={() => { onOpenPostCase(); setIsMobileMenuOpen(false); }}
+              className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-legal-crimson hover:bg-legal-crimsonDark text-white text-xs font-bold shadow-xs transition-colors"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Post New Legal Case</span>
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { X, FileText, Copy, Download, Check, Sparkles, Scale, ShieldCheck } from 'lucide-react';
 
-export default function LegalNoticeGenerator({ isOpen, onClose }) {
+export default function LegalNoticeGenerator({ isOpen, onClose, onConnectAdvocate }) {
   if (!isOpen) return null;
 
   const [noticeType, setNoticeType] = useState('cheque');
   const [copied, setCopied] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
   const [formData, setFormData] = useState({
     senderName: 'Rahul Mehra',
     senderAddress: 'C-42, Hauz Khas, New Delhi - 110016',
@@ -90,6 +91,33 @@ ADVOCATE`;
     navigator.clipboard.writeText(getNoticeBody());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownload = () => {
+    const text = getNoticeBody();
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Statutory_Legal_Notice_${noticeType.toUpperCase()}_${Date.now()}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setDownloaded(true);
+    setTimeout(() => setDownloaded(false), 2000);
+  };
+
+  const handleConnect = () => {
+    if (onConnectAdvocate) {
+      onConnectAdvocate({
+        noticeType,
+        formData,
+        noticeBody: getNoticeBody(),
+      });
+    } else {
+      onClose();
+    }
   };
 
   return (
@@ -221,24 +249,35 @@ ADVOCATE`;
         </div>
 
         {/* Footer actions */}
-        <div className="sticky bottom-0 bg-white px-6 py-4 border-t border-legal-creamBorder flex items-center justify-between">
+        <div className="sticky bottom-0 bg-white px-6 py-4 border-t border-legal-creamBorder flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-xs text-[#777777]">
             Want a verified advocate to review & dispatch on official letterhead?
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
             <button
               onClick={handleCopy}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-legal-creamBorder text-xs font-bold text-[#333333] hover:bg-legal-cream"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-legal-creamBorder text-xs font-bold text-[#333333] hover:bg-legal-cream transition-colors"
+              title="Copy notice to clipboard"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'Copied Notice' : 'Copy Notice Text'}</span>
+              <span>{copied ? 'Copied' : 'Copy Text'}</span>
             </button>
 
             <button
-              onClick={onClose}
-              className="inline-flex items-center gap-1.5 bg-legal-crimson hover:bg-legal-crimsonDark text-white px-4 py-2 rounded-xl text-xs font-bold shadow-soft"
+              onClick={handleDownload}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-legal-creamBorder text-xs font-bold text-[#333333] hover:bg-legal-cream transition-colors"
+              title="Download notice as a formatted text document"
             >
+              {downloaded ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Download className="w-3.5 h-3.5 text-legal-crimson" />}
+              <span>{downloaded ? 'Downloaded' : 'Download .TXT'}</span>
+            </button>
+
+            <button
+              onClick={handleConnect}
+              className="inline-flex items-center gap-1.5 bg-legal-crimson hover:bg-legal-crimsonDark text-white px-4 py-2 rounded-xl text-xs font-bold shadow-soft transition-all active:scale-95"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>Connect with Advocate</span>
             </button>
           </div>
