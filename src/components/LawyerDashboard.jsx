@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { 
-  Briefcase, 
-  Users, 
-  Calendar, 
-  DollarSign, 
-  ShieldCheck, 
-  CheckCircle2, 
-  Send, 
-  Clock, 
-  AlertCircle, 
-  FileCheck, 
+import {
+  Briefcase,
+  Users,
+  Calendar,
+  DollarSign,
+  ShieldCheck,
+  CheckCircle2,
+  Send,
+  Clock,
+  AlertCircle,
+  FileCheck,
   ChevronRight,
   TrendingUp,
   MapPin,
@@ -86,7 +86,7 @@ export default function LawyerDashboard({ cases, onAcceptCase, onSendMessage, on
 
   // Unassigned cases seeking advocate
   const openLeads = cases.filter(c => !c.assignedLawyerId || c.status === 'Seeking Advocate');
-  
+
   // Cases handled by this lawyer or sample active cases
   const myCases = cases.filter(c => c.assignedLawyerId === (currentLawyer?.id || 'lawyer-1') || c.status !== 'Seeking Advocate');
 
@@ -120,7 +120,7 @@ export default function LawyerDashboard({ cases, onAcceptCase, onSendMessage, on
   return (
     <div className="py-8 sm:py-12 bg-legal-cream min-h-screen legal-paper-bg">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Lawyer Profile Header */}
         <div className="bg-white rounded-3xl p-6 sm:p-7 border border-legal-creamBorder shadow-card mb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -164,11 +164,10 @@ export default function LawyerDashboard({ cases, onAcceptCase, onSendMessage, on
           <div className="flex flex-wrap items-center gap-2 mt-6 pt-5 border-t border-legal-creamBorder text-xs sm:text-sm font-bold">
             <button
               onClick={() => setActiveTab('leads')}
-              className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                activeTab === 'leads'
+              className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${activeTab === 'leads'
                   ? 'bg-legal-bronze text-white shadow-xs'
                   : 'bg-legal-cream text-[#555555] hover:text-[#111111]'
-              }`}
+                }`}
             >
               <Users className="w-4 h-4" />
               <span>Available Client Leads ({openLeads.length})</span>
@@ -176,11 +175,10 @@ export default function LawyerDashboard({ cases, onAcceptCase, onSendMessage, on
 
             <button
               onClick={() => setActiveTab('active')}
-              className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                activeTab === 'active'
+              className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${activeTab === 'active'
                   ? 'bg-legal-bronze text-white shadow-xs'
                   : 'bg-legal-cream text-[#555555] hover:text-[#111111]'
-              }`}
+                }`}
             >
               <FileCheck className="w-4 h-4" />
               <span>Active Matters Desk ({myCases.length})</span>
@@ -188,11 +186,10 @@ export default function LawyerDashboard({ cases, onAcceptCase, onSendMessage, on
 
             <button
               onClick={() => setActiveTab('diary')}
-              className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                activeTab === 'diary'
+              className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${activeTab === 'diary'
                   ? 'bg-legal-bronze text-white shadow-xs'
                   : 'bg-legal-cream text-[#555555] hover:text-[#111111]'
-              }`}
+                }`}
             >
               <Calendar className="w-4 h-4" />
               <span>Court Diary & Cause List</span>
@@ -278,11 +275,10 @@ export default function LawyerDashboard({ cases, onAcceptCase, onSendMessage, on
                   <div
                     key={c.id}
                     onClick={() => setActiveChatCaseId(c.id)}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${
-                      isSelected
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${isSelected
                         ? 'bg-white border-legal-bronze shadow-card ring-1 ring-legal-bronze/20'
                         : 'bg-white/80 border-legal-creamBorder hover:bg-white'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between gap-1 mb-1">
                       <span className="text-[11px] font-bold text-legal-crimson">{c.category}</span>
@@ -337,11 +333,10 @@ export default function LawyerDashboard({ cases, onAcceptCase, onSendMessage, on
                           key={idx}
                           className={`flex flex-col ${isLawyer ? 'items-end' : 'items-start'}`}
                         >
-                          <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-xs sm:text-sm ${
-                            isLawyer
+                          <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-xs sm:text-sm ${isLawyer
                               ? 'bg-legal-bronze text-white rounded-br-none'
                               : 'bg-white text-[#222222] border border-legal-creamBorder rounded-bl-none shadow-2xs'
-                          }`}>
+                            }`}>
                             {msg.text}
                           </div>
                           <span className="text-[10px] text-[#888888] mt-1 px-1">
@@ -441,7 +436,7 @@ export default function LawyerDashboard({ cases, onAcceptCase, onSendMessage, on
                 <Calendar className="w-5 h-5 text-legal-bronze" />
                 <h3 className="font-bold text-sm text-[#1C1C1C]">Add Court Hearing / Cause List Entry</h3>
               </div>
-              <button 
+              <button
                 onClick={() => setIsAddDiaryOpen(false)}
                 className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[#666666] hover:text-legal-crimson"
               >
@@ -539,7 +534,7 @@ export default function LawyerDashboard({ cases, onAcceptCase, onSendMessage, on
         </div>
       )}
 
-      </div>
+
     </div>
   );
 }
